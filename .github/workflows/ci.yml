@@ -9,6 +9,8 @@ on:
       - main
 
 jobs:
+
+  # Unit testing
   test:
     name: Unit testing
     runs-on: ubuntu-latest
@@ -27,9 +29,8 @@ jobs:
       - name: Run tests
         run: npm test 
 
-  # ---------------------------
-  # 1. Node.js Build & Test
-  # ---------------------------
+  # Node.js Build & Test
+
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
@@ -48,17 +49,14 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        run: npm run lint || true   # optional, adjust based on your lint script
-
-      - name: Run tests
-        run: npm test || true       # optional, adjust based on your test script
+        run: npm run lint || true  
 
       - name: Build project
         run: npm run build
 
-  # ---------------------------
-  # 2. Dependency Vulnerability Scan
-  # ---------------------------
+
+  # Dependency Vulnerability Scan
+ 
   dependency-scan:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
@@ -79,9 +77,9 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
-  # ---------------------------
-  # 3. Docker Build & Scan
-  # ---------------------------
+
+  # Docker Build & Scan
+ 
   docker-build-and-scan:
     name: Docker Build & Security Scan
     runs-on: ubuntu-latest
@@ -109,9 +107,9 @@ jobs:
           image-ref: streamgen-ai:latest
           severity: CRITICAL,HIGH
 
-  # ---------------------------
-  # 4. Optional: Deploy to Docker Hub
-  # ---------------------------
+ 
+  # Optional: Deploy to Docker Hub
+ 
   deploy:
     name: Deploy to Docker Hub
     runs-on: ubuntu-latest
