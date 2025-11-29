@@ -13,13 +13,11 @@ RUN npm run build
 
 # Serve with NGINX
 
-FROM alpine:3.20
+FROM nginx:1.27-alpine
 
-RUN apk update && apk add --no-cache nginx
+RUN rm -rf /usr/share/nginx/html/*
 
-# COPY --from=build /app/dist /usr/share/nginx/html
-
-COPY --from=build /app/dist /var/www/localhost/htdocs/
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
