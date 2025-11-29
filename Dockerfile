@@ -13,7 +13,7 @@ RUN npm run build
 
 # Serve with NGINX
 
-FROM nginx:1.27-alpine
+FROM nginx:1.27
 
 RUN rm -rf /usr/share/nginx/html/*
 
