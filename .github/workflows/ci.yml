@@ -117,7 +117,7 @@ jobs:
           severity: CRITICAL,HIGH
 
  
-  Deploy to Docker Hub
+  # Deploy to Docker Hub
  
   deploy:
     name: Deploy to Docker Hub
