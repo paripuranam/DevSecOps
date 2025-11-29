@@ -13,7 +13,7 @@ RUN npm run build
 
 # Serve with NGINX
 
-FROM nginx:alpine
+FROM alpine:3.20
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
