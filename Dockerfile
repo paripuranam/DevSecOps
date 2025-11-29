@@ -15,7 +15,11 @@ RUN npm run build
 
 FROM alpine:3.20
 
-COPY --from=build /app/dist /usr/share/nginx/html
+RUN apk update && apk add --no-cache nginx
+
+# COPY --from=build /app/dist /usr/share/nginx/html
+
+COPY --from=build /app/dist /var/www/localhost/htdocs/
 
 EXPOSE 80
 
