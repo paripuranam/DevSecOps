@@ -123,7 +123,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker buildx build --cache-from type=gha --cache-to type=gha,mode=max -t streamgen-ai:latest .
+        run: docker buildx build --cache-from type=gha --cache-to type=gha,mode=max -t streamgen-ai:latest --load .
 
       - name: Save docker artifact
         run: docker save streamgen-ai:latest -o streamgen-ai.tar
