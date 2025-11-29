@@ -13,12 +13,10 @@ RUN npm run build
 
 # Serve with NGINX
 
-FROM nginx:1.27
-
-RUN rm -rf /usr/share/nginx/html/*
+FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx","-g","daemon off;"]
