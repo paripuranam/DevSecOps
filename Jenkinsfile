@@ -25,29 +25,26 @@ pipeline {
         }
 
         stage('Docker Build & Scan') {
+            agent (label 'docker-machine')
             steps {
                 script {
-                    def image = docker.build("streamgen-ai:latest", ".")
-
-                    docker.image('aquasec/trivy:latest').inside {
-                        sh "trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest"
-                    }
-
+                    sh 'docker build -t streamgen-ai:latest .'
+                    sh "trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest"
                     echo "Docker image built and scanned: streamgen-ai:latest"
                 }
             }
         }
 
-        stage('Deploy to Docker Hub') {
-            when { branch 'main' }
-            steps {
-                script {
-                    docker.withRegistry('', 'docker-credentials-id') {
-                        docker.image("streamgen-ai:latest").push()
-                    }
-                }
-            }
-        }
+        // stage('Deploy to Docker Hub') {
+        //     when { branch 'main' }
+        //     steps {
+        //         script {
+        //             docker.withRegistry('', 'docker-credentials-id') {
+        //                 docker.image("streamgen-ai:latest").push()
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     post { always { echo "Pipeline Completed." } }
