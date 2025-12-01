@@ -25,7 +25,7 @@ pipeline {
         }
 
         stage('Docker Build & Scan') {
-            agent (label 'docker-machine')
+            agent { label 'docker-machine' }
             steps {
                 script {
                     sh 'docker build -t streamgen-ai:latest .'
@@ -38,7 +38,7 @@ pipeline {
         // stage('Deploy to Docker Hub') {
         //     when { branch 'main' }
         //     steps {
-        //         script {
+        //         script { 
         //             docker.withRegistry('', 'docker-credentials-id') {
         //                 docker.image("streamgen-ai:latest").push()
         //             }
