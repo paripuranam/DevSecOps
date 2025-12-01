@@ -13,7 +13,7 @@ pipeline {
 
     stages {
         stage('Unit Testing') {
-            agent { label 'node' }    // Optional: requires a node agent
+            //agent { label 'node' }    // Optional: requires a node agent
             steps {
                 checkout scm
 
