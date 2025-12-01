@@ -1,34 +1,25 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_USERNAME = credentials('7bd1416a-ce97-4e4f-a758-46a4cedf09cd')   // Jenkins credential ID
-        DOCKER_PASSWORD = credentials('9bc34a87-85b1-477c-b6cc-e4025ec5299e')   // Jenkins credential ID
+    tools {
+        nodejs 'node20'     // <-- Installed from Jenkins NodeJS plugin
     }
 
-    options {
-        skipStagesAfterUnstable()
-        timestamps()
+    environment {
+        DOCKER_USERNAME = credentials('7bd1416a-ce97-4e4f-a758-46a4cedf09cd')
+        DOCKER_PASSWORD = credentials('9bc34a87-85b1-477c-b6cc-e4025ec5299e')
     }
 
     stages {
+
         stage('Unit Testing') {
-            //agent { label 'node' }    // Optional: requires a node agent
             steps {
                 checkout scm
 
-                script {
-                    sh '''
-                        echo "Setting up Node.js 20"
-                        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                        sudo apt-get install -y nodejs
-                    '''
-
-                    sh '''
-                        npm ci
-                        npm test
-                    '''
-                }
+                sh '''
+                    npm ci
+                    npm test
+                '''
             }
         }
 
@@ -47,7 +38,7 @@ pipeline {
         stage('Dependency Security Scan') {
             steps {
                 checkout scm
-                
+
                 sh '''
                     npm ci
                     npm audit --audit-level=high || true
@@ -60,18 +51,11 @@ pipeline {
                 checkout scm
 
                 sh '''
-                    echo "Building Docker image..."
                     docker build -t streamgen-ai:latest .
-                '''
-
-                sh '''
-                    echo "Saving image artifact..."
                     docker save streamgen-ai:latest -o streamgen-ai.tar
                 '''
 
-                // Trivy Scan
                 sh '''
-                    echo "Running TRIVY security scan..."
                     trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest
                 '''
 
@@ -80,26 +64,15 @@ pipeline {
         }
 
         stage('Deploy to Docker Hub') {
-            when {
-                branch 'main'
-            }
+            when { branch 'main' }
             steps {
+                sh 'docker load -i streamgen-ai.tar'
 
-                script {
-                    echo "Loading Docker image artifact..."
-                    sh 'docker load -i streamgen-ai.tar'
-
-                    echo "Logging into Docker Hub"
-                    sh """
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                    """
-
-                    echo "Pushing Docker image"
-                    sh """
-                        docker tag streamgen-ai:latest ${DOCKER_USERNAME}/streamgen-ai:latest
-                        docker push ${DOCKER_USERNAME}/streamgen-ai:latest
-                    """
-                }
+                sh '''
+                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    docker tag streamgen-ai:latest ${DOCKER_USERNAME}/streamgen-ai:latest
+                    docker push ${DOCKER_USERNAME}/streamgen-ai:latest
+                '''
             }
         }
     }
