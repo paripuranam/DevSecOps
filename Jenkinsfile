@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'node20'     // <-- Installed from Jenkins NodeJS plugin
+        nodejs 'node20'
     }
 
     environment {
@@ -11,54 +11,39 @@ pipeline {
     }
 
     stages {
-
         stage('Unit Testing') {
             steps {
                 checkout scm
-
-                sh '''
-                    npm ci
-                    npm test
-                '''
+                sh 'npm ci && npm test'
             }
         }
 
         stage('Build & Test') {
             steps {
                 checkout scm
-
-                sh '''
-                    npm ci
-                    npm run lint || true
-                    npm run build
-                '''
+                sh 'npm ci && npm run lint || true && npm run build'
             }
         }
 
         stage('Dependency Security Scan') {
             steps {
-                checkout scm
-
-                sh '''
-                    npm ci
-                    npm audit --audit-level=high || true
-                '''
+                sh 'npm ci && npm audit --audit-level=high || true'
             }
         }
 
         stage('Docker Build & Scan') {
             steps {
-                checkout scm
+                script {
+                    def image = docker.build("streamgen-ai:latest", ".")
+                    
+                    // Scan image using Trivy in a container
+                    docker.image('aquasec/trivy:latest').inside {
+                        sh "trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest"
+                    }
 
-                sh '''
-                    docker build -t streamgen-ai:latest .
-                    docker save streamgen-ai:latest -o streamgen-ai.tar
-                '''
-
-                sh '''
-                    trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest
-                '''
-
+                    // Save the artifact
+                    sh 'docker save streamgen-ai:latest -o streamgen-ai.tar'
+                }
                 archiveArtifacts artifacts: 'streamgen-ai.tar', fingerprint: true
             }
         }
@@ -66,20 +51,17 @@ pipeline {
         stage('Deploy to Docker Hub') {
             when { branch 'main' }
             steps {
-                sh 'docker load -i streamgen-ai.tar'
-
-                sh '''
-                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                    docker tag streamgen-ai:latest ${DOCKER_USERNAME}/streamgen-ai:latest
-                    docker push ${DOCKER_USERNAME}/streamgen-ai:latest
-                '''
+                script {
+                    docker.withRegistry('', 'docker-credentials-id') {
+                        def image = docker.image("streamgen-ai:latest")
+                        image.push()
+                    }
+                }
             }
         }
     }
 
     post {
-        always {
-            echo "Pipeline Completed."
-        }
+        always { echo "Pipeline Completed." }
     }
 }
