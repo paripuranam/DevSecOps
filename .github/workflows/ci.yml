@@ -107,7 +107,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --severity-threshold=critical,high,medium
+          args: --severity-threshold=medium
 
 
   # Docker Build & Scan
@@ -156,7 +156,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: streamgen-ai:latest
-          args: --severity-threshold=critical,high,medium
+          args: --severity-threshold=medium
 
  
   # Deploy to Docker Hub
