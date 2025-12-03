@@ -3,10 +3,10 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - dev
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
 
@@ -100,6 +100,14 @@ jobs:
 
       - name: Audit dependencies
         run: npm audit --audit-level=high
+
+      - name: Run Snyk Dependency Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --severity-threshold=high
 
 
   # Docker Build & Scan
