@@ -158,7 +158,42 @@ jobs:
           image: streamgen-ai:latest
           args: --severity-threshold=medium
 
- 
+    # OWASP ZAP Baseline DAST Scan
+  zap-dast:
+    name: OWASP ZAP DAST Scan
+    runs-on: ubuntu-latest
+    needs: docker-build-and-scan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: streamgen-ai
+
+      - name: Load Docker image
+        run: docker load -i streamgen-ai.tar
+
+      - name: Run container for DAST scan
+        run: |
+          docker run -d -p 3000:3000 --name app streamgen-ai:latest
+          sleep 12
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: "http://localhost:3000"
+          cmd_options: "-a"
+          fail_action: true  # fails on medium/high issues
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: report.html
+
   # Deploy to Docker Hub
  
   # deploy:
