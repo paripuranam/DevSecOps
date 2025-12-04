@@ -179,20 +179,22 @@ jobs:
       - name: Run application container
         run: |
           docker run -d -p 3000:3000 --name app streamgen-ai:latest
-          sleep 12
+          echo "Waiting for app to start..."
+          sleep 20
+          docker logs app || true
 
-      - name: Fix permissions for zap.yaml
-        run: sudo chmod 666 security/zap.yaml
+      - name: Copy zap.yaml to /tmp (writable directory)
+        run: |
+          cp security/zap.yaml /tmp/zap.yaml
+          chmod 666 /tmp/zap.yaml
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: "http://localhost:3000"
           fail_action: true
-          rules_file_name: "security/zap.yaml"
+          rules_file_name: "/tmp/zap.yaml"
           cmd_options: "-J report_json.json -w report_md.md -r report_html.html -a"
-        env:
-          GITHUB_WORKSPACE: ${{ github.workspace }}
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
@@ -202,10 +204,6 @@ jobs:
             report_json.json
             report_md.md
             report_html.html
-
-
-
-
 
   # Deploy to Docker Hub
  
