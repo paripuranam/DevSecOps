@@ -181,20 +181,17 @@ jobs:
           docker run -d \
             --name streamgen-app \
             -p 3000:3000 \
+            --add-host=host.docker.internal:host-gateway \
             streamgen-ai:latest
 
-          echo "Waiting for app to start..."
-          timeout=60
-          while ! curl -f http://localhost:3000 >/dev/null 2>&1; do
-            ((timeout--))
-            if [ $timeout -eq 0 ]; then
-              echo "App failed to start in time"
-              docker logs streamgen-app
-              exit 1
+          echo "Waiting for app to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000 2>/dev/null; then
+              echo "App is up!"
+              break
             fi
             sleep 2
           done
-          echo "App is up and running!"
 
       # Create dedicated writable directory for ZAP config & reports
       - name: Prepare ZAP workspace
