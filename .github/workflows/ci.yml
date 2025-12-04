@@ -208,13 +208,13 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "http://host.docker.internal:3000"
-          rules_file_name: "/tmp/zap-wrk/zap.yaml"
+          rules_file_name: "security/zap.yaml"
           artifact_name: zap-report
           fail_action: false
-          cmd_options: >-
-            -J /tmp/zap-wrk/zap-report.json
-            -w /tmp/zap-wrk/zap-report.md
-            -r /tmp/zap-wrk/zap-report.html
+          cmd_options: >
+            -J zap-report.json
+            -w zap-report.md
+            -r zap-report.html
             --autooff
         env:
           ZAP_WORKSPACE: /tmp/zap-wrk
