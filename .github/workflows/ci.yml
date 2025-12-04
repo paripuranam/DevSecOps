@@ -163,9 +163,6 @@ jobs:
     name: OWASP ZAP DAST Scan
     runs-on: ubuntu-latest
     needs: docker-build-and-scan
-    permissions:
-      contents: read
-      actions: read
 
     steps:
       - name: Checkout code
@@ -182,7 +179,7 @@ jobs:
       - name: Start application
         run: |
           docker run -d --name app -p 3000:3000 streamgen-ai:latest
-          echo "Waiting for app to start..."
+          echo "Waiting for app..."
           for i in {1..30}; do
             if curl -sf http://localhost:3000 >/dev/null 2>&1; then
               echo "App is ready!"
@@ -191,44 +188,36 @@ jobs:
             sleep 2
           done
 
-      # Create isolated writable ZAP workspace (not inside repo)
-      - name: Prepare ZAP workspace
+      # Put zap.yaml inside the repo root (ZAP will see it inside /zap/wrk)
+      - name: Copy ZAP rules file
         run: |
-          mkdir -p /tmp/zap-wrk
-          if [ -f .zap/zap.yaml ]; then
-            cp .zap/zap.yaml /tmp/zap-wrk/zap.yaml
-            echo "zap.yaml copied to /tmp/zap-wrk"
-          else
-            echo "No custom zap.yaml found"
-          fi
-          chmod -R 777 /tmp/zap-wrk
+          cp security/zap.yaml zap.yaml
+          chmod 666 zap.yaml
 
-      - name: Fix permissions for ZAP reports
-        run: sudo chmod -R 777 ${{ github.workspace }}
-        
-      # Run ZAP with workspace override (works 100%)
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "http://host.docker.internal:3000"
-          rules_file_name: "security/zap.yaml"
+          rules_file_name: "zap.yaml"        # MUST be filename only
           artifact_name: zap-report
-          fail_action: false
-          cmd_options: >
-            -J zap-report.json
-            -w zap-report.md
-            -r zap-report.html
+          cmd_options: >-
+            -J report_json.json
+            -w report_md.md
+            -r report_html.html
             --autooff
-        env:
-          ZAP_WORKSPACE: /tmp/zap-wrk
 
       - name: Upload ZAP Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: /tmp/zap-wrk/
+          path: |
+            report_json.json
+            report_md.md
+            report_html.html
+            zap.yaml
           if-no-files-found: warn
+
 
 
 
