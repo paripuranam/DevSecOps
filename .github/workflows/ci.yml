@@ -163,12 +163,15 @@ jobs:
     name: OWASP ZAP DAST Scan
     runs-on: ubuntu-latest
     needs: docker-build-and-scan
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
+      - name: Download Docker image
         uses: actions/download-artifact@v4
         with:
           name: streamgen-ai
@@ -176,55 +179,56 @@ jobs:
       - name: Load Docker image
         run: docker load -i streamgen-ai.tar
 
-      - name: Start application container
+      - name: Start application
         run: |
-          docker run -d \
-            --name streamgen-app \
-            -p 3000:3000 \
-            --add-host=host.docker.internal:host-gateway \
-            streamgen-ai:latest
-
-          echo "Waiting for app to be ready..."
+          docker run -d --name app -p 3000:3000 streamgen-ai:latest
+          echo "Waiting for app..."
           for i in {1..30}; do
-            if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000 2>/dev/null; then
-              echo "App is up!"
+            if curl -f http://localhost:3000 >/dev/null 2>&1; then
+              echo "App is ready!"
               break
             fi
             sleep 2
           done
 
-      # Create dedicated writable directory for ZAP config & reports
-      - name: Prepare ZAP workspace
+      # Create a completely separate writable directory OUTSIDE the repo mount
+      - name: Create isolated ZAP workspace
         run: |
-          mkdir -p zap-wrk
-          cp .zap/zap.yaml zap-wrk/ || echo "No custom zap.yaml found, proceeding without"
+          mkdir -p /tmp/zap-wrk
+          if [ -f .zap/zap.yaml ]; then
+            cp .zap/zap.yaml /tmp/zap-wrk/
+            echo "Custom zap.yaml copied"
+          else
+            echo "No custom zap.yaml found"
+          fi
 
-      # Run ZAP Baseline Scan – FIXED VERSION
-      - name: Run OWASP ZAP Baseline Scan
+      # Run ZAP with custom volume mount that bypasses the permission bug
+      - name: Run OWASP ZAP Baseline Scan (Fixed)
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: http://host.docker.internal:3000
-          rules_file_name: zap-wrk/zap.yaml
+          rules_file_name: /tmp/zap-wrk/zap.yaml
           artifact_name: zap-report
-          fail_action: false   # set to true only when you're ready to break on findings
-          cmd_options: >
+          fail_action: false
+          cmd_options: >-
             -J zap-report.json
             -w zap-report.md
             -r zap-report.html
             --autooff
+        env:
+          # This is the magic: override the default volume mount
+          ZAP_WORK_DIR: /tmp/zap-wrk
 
-      # Always upload reports (even on permission errors)
-      - name: Upload ZAP reports
+      # Upload reports (always, even if ZAP exits with code 3)
+      - name: Upload ZAP Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: |
-            zap-report.*
-            *.json
-            *.md
-            *.html
-          if-no-files-found: ignore
+            /tmp/zap-wrk/zap-report.*
+            *.json *.md *.html
+          if-no-files-found: warn
 
 
 
