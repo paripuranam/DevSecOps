@@ -1,0 +1,5 @@
+rules:
+  - id: 10020
+    action: ignore
+  - id: 10021
+    action: warn
