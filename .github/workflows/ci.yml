@@ -176,35 +176,45 @@ jobs:
       - name: Load Docker image
         run: docker load -i streamgen-ai.tar
 
-      - name: Run application container
+      # Start the container with a proper name and expose port
+      - name: Start application container
         run: |
-          docker run -d -p 3000:3000 --name app streamgen-ai:latest
-          echo "Waiting for app to start..."
-          sleep 15
-          docker logs app || true
+          docker run -d \
+            --name streamgen-app \
+            -p 3000:3000 \
+            --add-host=host.docker.internal:host-gateway \
+            streamgen-ai:latest
 
-      # Prepare ZAP rules file (this is now the correct path & permission)
-      - name: Prepare ZAP rules file
+          echo "Waiting for app to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000 2>/dev/null; then
+              echo "App is up!"
+              break
+            fi
+            sleep 2
+          done
+
+      # Copy rules file into the job workspace with correct permissions
+      - name: Prepare ZAP configuration
         run: |
-          cp .zap/zap.yaml zap.yaml
-          chmod 644 zap.yaml
+          mkdir -p zap-config
+          cp .zap/zap.yaml zap-config/zap.yaml
+          cat zap-config/zap.yaml  # debug: show content
 
+      # Run ZAP Baseline Scan - fixed mounting and permissions
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
+        uses: zaproxy/action-baseline@v0.12.0   # upgraded + more stable
         with:
-          target: "http://localhost:3000"
+          target: http://host.docker.internal:3000
+          docker_image: ghcr.io/zaproxy/zaproxy:stable
+          rules_file_name: zap-config/zap.yaml
           fail_action: true
-          rules_file_name: "zap.yaml"
-          cmd_options: "-J report_json.json -w report_md.md -r report_html.html -a"
-
-      - name: Upload ZAP report artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: |
-            report_json.json
-            report_md.md
-            report_html.html
+          artifact_name: zap-report
+          cmd_options: >-
+            -J zap-report.json
+            -w zap-report.md
+            -r zap-report.html
+            --autooff
 
 
 
