@@ -203,6 +203,9 @@ jobs:
           fi
           chmod -R 777 /tmp/zap-wrk
 
+      - name: Fix permissions for ZAP reports
+        run: sudo chmod -R 777 ${{ github.workspace }}
+        
       # Run ZAP with workspace override (works 100%)
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
