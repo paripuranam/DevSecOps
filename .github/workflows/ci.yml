@@ -191,8 +191,8 @@ jobs:
       # Put zap.yaml inside the repo root (ZAP will see it inside /zap/wrk)
       - name: Copy ZAP rules file
         run: |
-          cp security/zap.yaml zap.yaml
-          chmod 666 zap.yaml
+          cp .zap/zap.yaml zap.yaml
+          chmod 777 zap.yaml
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
