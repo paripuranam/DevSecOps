@@ -199,7 +199,7 @@ jobs:
 
       - name: File finding
         run: |
-          find -name / zap.yaml
+          find . -name "zap.yaml"
           pwd
 
       - name: Run OWASP ZAP Baseline Scan
