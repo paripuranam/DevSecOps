@@ -168,17 +168,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: streamgen-ai
+      # - name: Download Docker image
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: streamgen-ai
 
-      - name: Load Docker image
-        run: docker load -i streamgen-ai.tar
+      # - name: Load Docker image
+      #   run: docker load -i streamgen-ai.tar
+
+      - name: docker pull
+        run: docker pull bkimminich/juice-shop
 
       - name: Start application
         run: |
-          docker run -d --name app -p 3000:3000 streamgen-ai:latest
+          docker run -d --name app -p 3000:3000 bkimminich/juice-shop:latest
           echo "Waiting for app..."
           for i in {1..30}; do
             if curl -sf http://localhost:3000 >/dev/null 2>&1; then
