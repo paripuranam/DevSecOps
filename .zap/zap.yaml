@@ -1,5 +1,8 @@
-rules:
-  - id: "10020"
-    action: "ignore"
-  - id: "10021"
-    action: "warn"
+- ruleId: "10010"
+  action: "ignore"
+
+- ruleId: "10020"
+  action: "warn"
+
+- ruleId: "10021"
+  action: "fail"
