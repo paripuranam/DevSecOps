@@ -194,7 +194,8 @@ jobs:
       # Put zap.yaml inside the repo root (ZAP will see it inside /zap/wrk)
       - name: Copy ZAP rules file
         run: |
-          mv .zap/zap.yaml zap.yaml
+          pwd
+          mv .zap/zap.yaml /home/runner/work/DevSecOps/DevSecOps/zap.yaml
           chmod 777 zap.yaml
 
       - name: File finding
