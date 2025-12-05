@@ -196,10 +196,8 @@ jobs:
         run: |
           pwd
           mkdir -p /tmp/zap/rules
-          mv .zap/zap.yaml /home/runner/work/DevSecOps/DevSecOps/zap.yaml
-          cp ./zap.yaml /tmp/zap/rules/rules.yaml
-          chmod 777 zap.yaml
-          chmod 777 /tmp/zap/rules/rules.yaml
+          mv .zap/zap.yaml rules.yaml
+          chmod 777 rules.yaml
 
       - name: File finding
         run: |
@@ -210,7 +208,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "http://host.docker.internal:3000"
-          rules_file_name: "/zap/rules/rules.yaml"        # MUST be filename only
+          rules_file_name: "rules.yaml"        # MUST be filename only
           artifact_name: zap-report
           cmd_options: >-
             -J report_json.json
