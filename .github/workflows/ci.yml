@@ -197,6 +197,11 @@ jobs:
           cp .zap/zap.yaml zap.yaml
           chmod 777 zap.yaml
 
+      - name: File finding
+        run: |
+          find -name / zap.yaml
+          pwd
+
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
