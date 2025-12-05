@@ -191,45 +191,32 @@ jobs:
             sleep 2
           done
 
-      - name: ZAP Scan
-        uses: zaproxy/action-baseline@v0.3.0
-        with:
-          # token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://host.docker.internal:3000'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
-
       # Put zap.yaml inside the repo root (ZAP will see it inside /zap/wrk)
-      # - name: Copy ZAP rules file to correct location
-      #   run: |
-      #     mkdir -p ~/.zap/rules
-      #     cp .zap/zap.yaml ~/.zap/rules/rules.yaml
-      #     chmod 644 ~/.zap/rules/rules.yaml
-      #     ls -la ~/.zap/rules/
+      - name: Copy ZAP rules to repository root
+        run: |
+          mkdir -p ~/.zap/rules
+          cp .zap/zap.yaml ./zap.yaml
+          ls -la zap.yaml
 
-      # - name: Run OWASP ZAP Baseline Scan
-      #   uses: zaproxy/action-baseline@v0.12.0
-      #   with:
-      #     target: "http://host.docker.internal:3000"
-      #     rules_file_name: "rules.yaml"        # just the filename
-      #     artifact_name: zap-report
-      #     cmd_options: >-
-      #       -J report_json.json
-      #       -w report_md.md
-      #       -r report_html.html
-      #       --autooff
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: "http://host.docker.internal:3000"
+          rules_file_name: zap.yaml          # now exists in repo root
+          artifact_name: zap-scan-report
+          cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
-      # - name: Upload ZAP Reports
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: zap-report
-      #     path: |
-      #       report_json.json
-      #       report_md.md
-      #       report_html.html
-      #       zap.yaml
-      #     if-no-files-found: warn
+      - name: Upload ZAP Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: |
+            report_json.json
+            report_md.md
+            report_html.html
+            zap.yaml
+          if-no-files-found: warn
 
 
 
