@@ -199,8 +199,7 @@ jobs:
         with:
           target: "http://localhost:3000"
           # rules_file_name: "zap-rules.tsv"
-          # artifact_name: ""
-          artifact_name: none
+          artifact_name: "zap_report"
           allow_issue_writing: false
           cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
@@ -210,17 +209,17 @@ jobs:
       #     target: 'http://localhost:3000' #Specify the endpoint of your application
       #     allow_issue_writing: false
 
-      - name: Upload ZAP Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: |
-            report_json.json
-            report_md.md
-            report_html.html
-            zap.yaml
-          if-no-files-found: warn
+      # - name: Upload ZAP Reports
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: zap-report
+      #     path: |
+      #       report_json.json
+      #       report_md.md
+      #       report_html.html
+      #       zap.yaml
+      #     if-no-files-found: warn
 
 
 
