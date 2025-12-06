@@ -199,7 +199,7 @@ jobs:
         with:
           target: "http://localhost:3000"
           # rules_file_name: "zap-rules.tsv"
-          # artifact_name: zapreport
+          artifact_name: ""
           allow_issue_writing: false
           cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
