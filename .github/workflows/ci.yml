@@ -3,13 +3,12 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - dev
-  # pull_request:
-  #   branches:
-  #     - main
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-
   # Unit testing
   test:
     name: Unit testing
