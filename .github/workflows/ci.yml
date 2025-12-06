@@ -209,7 +209,7 @@ jobs:
       - name: Run OWASP ZAP Scan
         uses: zaproxy/action-full-scan@v0.10.0
         with:
-          target: 'http://host.docker.internal:3000' #Specify the endpoint of your application
+          target: 'http://localhost:3000' #Specify the endpoint of your application
           allow_issue_writing: false
 
       # - name: Upload ZAP Reports
