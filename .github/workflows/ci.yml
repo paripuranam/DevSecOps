@@ -181,7 +181,7 @@ jobs:
 
       - name: Start application
         run: |
-          docker run -d --name app -p 3000:3000 streamgen-ai:latest
+          docker run -d --name app -p 3000:80 streamgen-ai:latest
           echo "Waiting for app..."
           for i in {1..60}; do
             if curl -sf http://localhost:3000 >/dev/null 2>&1; then
