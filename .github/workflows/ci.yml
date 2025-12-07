@@ -166,7 +166,8 @@ jobs:
           image: streamgen-ai:${{ steps.vars.outputs.TAG }}
           args: --severity-threshold=medium
 
-    # OWASP ZAP Baseline DAST Scan
+  # OWASP ZAP Baseline DAST Scan
+
   zap-dast:
     name: OWASP ZAP DAST Scan
     runs-on: ubuntu-latest
@@ -206,7 +207,7 @@ jobs:
           cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
   # Deploy to Docker Hub
- 
+  
   deploy:
     name: Deploy to Docker Hub
     runs-on: ubuntu-latest
