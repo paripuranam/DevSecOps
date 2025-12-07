@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamgen-ai
+  labels:
+    app: streamgen-ai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: streamgen-ai
+  template:
+    metadata:
+      labels:
+        app: streamgen-ai
+    spec:
+      containers:
+      - name: streamgen-ai
+        image: paripuranam/streamgen-ai:latest
+        ports:
+        - containerPort: 80
