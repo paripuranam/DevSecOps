@@ -29,6 +29,7 @@
 - **Dependency scanning** with `npm audit` to catch vulnerabilities early
 - **Container security scanning** using **Trivy** to ensure Docker images are secure
 - **Multi-stage Docker builds** to reduce attack surface in production images
+- **Kubernetes Deployment** to deploy in kubernetes cluster using ArgoCD
 - **Linting and TypeScript type checks** to enforce code quality and security
 - **Environment isolation** with `.env` and Docker containers
 
@@ -121,13 +122,23 @@ The GitHub Actions pipeline implements DevSecOps principles:
 - Builds Docker image.
 - Scans image using **Trivy** for high and critical vulnerabilities.
 
-### Optional Deployment
+### OWASP ZAP DAST Scan
+- Run the Docker container.
+- Scan application using **OWASP ZAP**.
+
+### Deploy to Docker Hub
 - Pushes Docker image to Docker Hub securely.
 - Only deploys from `main` branch.
+
+### Update Kubernetes Deployment
+- Get the latest build image tag.
+- Update the kubernetes deployment manifest file.
 
 ### Secrets Required in GitHub Actions:
 - `DOCKER_USERNAME` – Docker Hub username
 - `DOCKER_PASSWORD` – Docker Hub password
+- `TOKEN` – Githuh Token
+- `SNYK_TOKEN` – Snyk API Token
 
 ### Best Practices:
 - Keep secrets in GitHub Actions secrets, never in `.env` files.
@@ -143,6 +154,7 @@ The GitHub Actions pipeline implements DevSecOps principles:
 streamgen-ai/
 ├─ components/           # React components
 ├─ services/             # Business logic / API services
+├─ kubernetes/           # Kubernetes files
 ├─ node_modules/         # npm dependencies
 ├─ App.tsx               # Main App component
 ├─ index.tsx             # React entry point
