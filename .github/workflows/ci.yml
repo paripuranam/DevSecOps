@@ -263,6 +263,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  terraform-scan-trivy:
+    name: Terraform Security Scan (Trivy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy IaC Scan (non-blocking)
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
+        with:
+          scan-type: config
+          scan-ref: terraform
+          severity: CRITICAL,HIGH,MEDIUM
+          format: table
+          ignore-unfixed: true
+
+
 
   # Update Kubernetes Deployment
 
