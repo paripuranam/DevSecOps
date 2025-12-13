@@ -242,7 +242,7 @@ jobs:
   terraform-scan-trivy:
     name: Terraform Security Scan (Trivy)
     runs-on: ubuntu-latest
-    needs: deploy
+    needs: docker-build-and-scan
 
     steps:
       - name: Checkout code
