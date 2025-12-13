@@ -261,6 +261,8 @@ jobs:
         uses: aquasecurity/tfsec-action@master
         with:
           working_directory: terraform
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
 
   # Update Kubernetes Deployment
