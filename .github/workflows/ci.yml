@@ -254,12 +254,12 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Initialize Terraform
-        run: terraform init ./terraform
+        run: terraform init /terraform
 
       - name: Run tfsec scan
         uses: aquasecurity/tfsec-action@master
         with:
-          directory: ./terraform
+          directory: /terraform
 
   # Update Kubernetes Deployment
 
