@@ -236,7 +236,33 @@ jobs:
         run: |
           docker tag streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }} ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
           docker push ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
-  
+
+  # terraform security scan
+
+  terraform-scan:
+    name: Terraform Security Scan
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: terraform init ./terraform
+
+      - name: Run tfsec scan
+        uses: aquasecurity/tfsec-action@master
+        with:
+          directory: ./terraform
+
+  # Update Kubernetes Deployment
+
   update-k8s:
     name: Update Kubernetes Deployment
     runs-on: ubuntu-latest
