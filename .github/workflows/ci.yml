@@ -260,9 +260,6 @@ jobs:
         continue-on-error: true
         with:
           working_directory: terraform
-          additional_args: >
-            --no-colour
-            --concise-output
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
