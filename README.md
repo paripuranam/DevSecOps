@@ -1,173 +1,156 @@
-# StreamGen-AI: DevSecOps-Focused React + TypeScript Project
+# StreamGen AI
 
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org/)
-[![Vite](https://img.shields.io/badge/vite-^5.0-blue)](https://vitejs.dev/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blueviolet)](https://github.com/features/actions)
+StreamGen AI is a React + TypeScript movie discovery app with AI-powered genre feeds, search, and movie detail enrichment using Google Gemini. The repository also includes Docker, Kubernetes, Terraform, GitHub Actions, and Jenkins pipeline definitions.
 
-**StreamGen-AI** is a modern, secure frontend application built with React + TypeScript + Vite, containerized with Docker, and engineered with **DevSecOps practices** for secure development and deployment.
+## Tech Stack
 
----
+- React 19
+- TypeScript
+- Vite 6
+- Vitest
+- Google GenAI SDK (`@google/genai`)
+- Tailwind utility classes via CDN in `index.html`
 
-## Table of Contents
+## Features
 
-- [Key DevSecOps Features](#key-devsecops-features)
-- [Prerequisites](#prerequisites)
-- [Setup & Development](#setup--development)
-- [Production Build](#production-build)
-- [Docker Usage](#docker-usage)
-- [Security & CI/CD Pipeline](#security--cicd-pipeline)
-- [Folder Structure](#folder-structure)
-- [License](#license)
+- Netflix-style home UI with hero banner and horizontal movie rows
+- AI-generated movie lists by genre
+- AI-powered search results
+- AI-enhanced modal metadata (cast, duration, mood)
+- Fallback curated movie data when AI content is unavailable
+- Poster/backdrop resolution using TMDB paths, with seeded image fallback
 
----
+## Project Structure
 
-## Key DevSecOps Features
-
-- **CI/CD with GitHub Actions** for automated build, test, and deployment
-- **Dependency scanning** with `npm audit` to catch vulnerabilities early
-- **Container security scanning** using **Trivy** to ensure Docker images are secure
-- **Multi-stage Docker builds** to reduce attack surface in production images
-- **Kubernetes Deployment** to deploy in kubernetes cluster using ArgoCD
-- **Linting and TypeScript type checks** to enforce code quality and security
-- **Environment isolation** with `.env` and Docker containers
-
----
-
-## Prerequisites
-
-- Node.js >= 20
-- npm >= 9
-- Docker >= 24
-- GitHub account (for CI/CD and DevSecOps integration)
-
----
-
-## Setup & Development
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/streamgen-ai.git
-   cd streamgen-ai
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm ci
-   ```
-
-3. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open the application:**
-   ```
-   http://localhost:5173
-   ```
-
-5. **Lint code and enforce secure coding practices:**
-   ```bash
-   npm run lint
-   ```
-
-6. **Run tests:**
-   ```bash
-   npm test
-   ```
-
----
-
-## Production Build
-
-Build optimized production assets:
-```bash
-npm run build
-```
-The production-ready files are in the `dist/` folder.
-
----
-
-## Docker Usage
-
-### Build Docker Image
-```bash
-docker build -t streamgen-ai .
-```
-
-### Run Docker Container
-```bash
-docker run -p 5173:80 streamgen-ai
-```
-
-### DevSecOps Notes:
-- **Multi-stage builds** separate build and runtime environments to reduce attack surface.
-- **Trivy scanning** is integrated into the CI pipeline to detect critical and high severity vulnerabilities in Docker images.
-
----
-
-## Security & CI/CD Pipeline
-
-The GitHub Actions pipeline implements DevSecOps principles:
-
-### Build & Test
-- Installs dependencies, runs lint and TypeScript checks.
-- Executes unit tests to ensure code integrity.
-
-### Dependency Security Scan
-- Runs `npm audit` to catch vulnerabilities in npm packages.
-
-### Docker Build & Security Scan
-- Builds Docker image.
-- Scans image using **Trivy** for high and critical vulnerabilities.
-
-### OWASP ZAP DAST Scan
-- Run the Docker container.
-- Scan application using **OWASP ZAP**.
-
-### Deploy to Docker Hub
-- Pushes Docker image to Docker Hub securely.
-- Only deploys from `main` branch.
-
-### Update Kubernetes Deployment
-- Get the latest build image tag.
-- Update the kubernetes deployment manifest file.
-
-### Secrets Required in GitHub Actions:
-- `DOCKER_USERNAME` – Docker Hub username
-- `DOCKER_PASSWORD` – Docker Hub password
-- `TOKEN` – Githuh Token
-- `SNYK_TOKEN` – Snyk API Token
-
-### Best Practices:
-- Keep secrets in GitHub Actions secrets, never in `.env` files.
-- Use multi-stage builds to minimize exposed layers.
-- Scan dependencies and images regularly.
-- Automate testing and security scans for every PR.
-
----
-
-## Folder Structure
-
-```bash
+```text
 streamgen-ai/
-├─ components/           # React components
-├─ services/             # Business logic / API services
-├─ kubernetes/           # Kubernetes files
-├─ node_modules/         # npm dependencies
-├─ App.tsx               # Main App component
-├─ index.tsx             # React entry point
-├─ index.html            # HTML template
-├─ package.json          # npm configuration
-├─ tsconfig.json         # TypeScript configuration
-├─ vite.config.ts        # Vite configuration
-├─ Dockerfile            # Docker build file
-├─ README.md             # Documentation
+├── .github/workflows/ci.yml      # GitHub Actions DevSecOps pipeline
+├── components/                   # UI components (Navbar, Hero, Row, Modal, MovieCard)
+├── services/                     # Gemini integration + tests
+├── kubernetes/                   # Deployment + Service manifests
+├── terraform/                    # AWS VPC + private EKS Terraform config
+├── App.tsx                       # Main app orchestration
+├── constants.ts                  # Fallback movie data + genre list
+├── index.tsx                     # React entrypoint
+├── types.ts                      # Shared TypeScript types
+├── Dockerfile                    # Multi-stage build (Node -> Nginx)
+├── Jenkinsfile                   # Jenkins pipeline
+├── vite.config.ts                # Vite config + env injection
+└── README.md
 ```
 
----
+## Local Development
 
-## License
+### Prerequisites
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+- Node.js 20+
+- npm
+
+### Environment
+
+Create/update `.env.local`:
+
+```env
+GEMINI_API_KEY=your_api_key_here
+```
+
+`vite.config.ts` maps this value to `process.env.API_KEY` at build/runtime.
+
+### Install and run
+
+```bash
+npm ci
+npm run dev
+```
+
+App runs on `http://localhost:3000` (configured in `vite.config.ts`).
+
+## Scripts
+
+- `npm run dev` - start Vite dev server
+- `npm run build` - create production build in `dist/`
+- `npm run preview` - preview production build locally
+- `npm test` - run Vitest tests
+
+## Testing
+
+Current tests live in:
+
+- `services/geminiService.test.ts`
+
+Run:
+
+```bash
+npm test
+```
+
+## Docker
+
+### Build image
+
+```bash
+docker build -t streamgen-ai:local .
+```
+
+### Run container
+
+```bash
+docker run --rm -p 3000:80 streamgen-ai:local
+```
+
+Then open `http://localhost:3000`.
+
+## CI/CD and Security (GitHub Actions)
+
+Workflow file: `.github/workflows/ci.yml`
+
+Pipeline stages include:
+
+1. Unit testing (`npm test`)
+2. Build (`npm run build`)
+3. Dependency scanning (`npm audit`, Snyk)
+4. Docker image build + scans (Trivy, Snyk Container)
+5. OWASP ZAP baseline DAST scan
+6. Terraform config scan (Trivy)
+7. Docker image push (main branch)
+8. Kubernetes deployment manifest image update (main branch)
+
+### Required GitHub Secrets
+
+- `DOCKER_USERNAME`
+- `DOCKER_PASSWORD`
+- `SNYK_TOKEN`
+- `TOKEN` (used for committing updated K8s manifest)
+
+## Jenkins Pipeline
+
+`Jenkinsfile` defines stages for:
+
+- Unit testing
+- Build
+- Dependency audit
+- Docker build + Trivy image scan
+
+## Kubernetes
+
+Kubernetes manifests in `kubernetes/`:
+
+- `deployment.yaml` - `streamgen-ai` deployment (2 replicas, container port 80)
+- `service.yaml` - NodePort service exposing port 80
+
+## Terraform
+
+`terraform/main.tf` provisions:
+
+- AWS provider config
+- VPC via `terraform-aws-modules/vpc/aws`
+- Private EKS cluster via `terraform-aws-modules/eks/aws`
+- Additional security group
+- Cluster outputs
+
+Default region in current config: `ap-south-1`.
+
+## Notes
+
+- The workflow includes a lint step (`npm run lint || true`), but no `lint` script currently exists in `package.json`.
+- `index.html` includes Tailwind CDN and an import map; the app itself is bundled by Vite for standard local and CI builds.
