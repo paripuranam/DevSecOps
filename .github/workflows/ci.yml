@@ -22,21 +22,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks (full git history)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: --redact --exit-code=2 --log-opts="--all"
+      - name: Install Gitleaks
+        run: |
+          GITLEAKS_VERSION="8.24.3"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP/bin" gitleaks
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/bin/gitleaks" version
 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Gitleaks (full git history)
+        run: gitleaks detect --source . --redact --exit-code 2 --log-opts="--all"
 
       - name: Run Gitleaks (repository files)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: --redact --exit-code=2 --source=. --no-git
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gitleaks detect --source . --no-git --redact --exit-code 2
 
 
   # Unit testing
