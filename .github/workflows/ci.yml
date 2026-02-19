@@ -32,10 +32,10 @@ jobs:
           "$RUNNER_TEMP/bin/gitleaks" version
 
       - name: Run Gitleaks (full git history)
-        run: gitleaks detect --source . --redact --exit-code 2 --log-opts="--all"
+        run: gitleaks detect --source . --config .gitleaks.toml --redact --exit-code 2 --log-opts="--all"
 
       - name: Run Gitleaks (repository files)
-        run: gitleaks detect --source . --no-git --redact --exit-code 2
+        run: gitleaks detect --source . --config .gitleaks.toml --no-git --redact --exit-code 2
 
 
   # Unit testing

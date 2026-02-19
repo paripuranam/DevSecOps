@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "custom-aws-access-key"
+description = "Detect AWS access key ids, including demo/test strings"
+regex = '''AKIA[0-9A-Z]{16}'''
+keywords = ["AKIA"]
