@@ -32,7 +32,7 @@ jobs:
           "$RUNNER_TEMP/bin/gitleaks" version
 
       - name: Run Gitleaks (full git history)
-        run: gitleaks detect --source . -v --redact --exit-code 1
+        run: gitleaks detect --source . -v
 
       # - name: Run Gitleaks (repository files)
       #   run: gitleaks detect --source . --no-git --redact --exit-code 2
