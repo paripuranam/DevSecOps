@@ -1,45 +1,61 @@
-# StreamGen AI
+# DevSecOps Project: StreamGen AI
 
-StreamGen AI is a React + TypeScript movie discovery app with AI-powered genre feeds, search, and movie detail enrichment using Google Gemini. The repository also includes Docker, Kubernetes, Terraform, GitHub Actions, and Jenkins pipeline definitions.
+This repository is primarily a **DevSecOps implementation project**.  
+`StreamGen AI` is the sample application used to validate secure CI/CD, container security, infrastructure-as-code, and Kubernetes delivery practices.
 
-## Tech Stack
+## DevSecOps Focus Areas
 
-- React 19
-- TypeScript
-- Vite 6
-- Vitest
-- Google GenAI SDK (`@google/genai`)
-- Tailwind utility classes via CDN in `index.html`
+- Secure CI/CD with GitHub Actions (`.github/workflows/ci.yml`)
+- Shift-left security checks in pipeline stages
+- Container image build, scan, and publish workflow
+- Kubernetes deployment automation using versioned manifests
+- Infrastructure provisioning with Terraform for AWS EKS
+- Alternate enterprise pipeline support via Jenkins (`Jenkinsfile`)
 
-## Features
+## End-to-End DevSecOps Flow
 
-- Netflix-style home UI with hero banner and horizontal movie rows
-- AI-generated movie lists by genre
-- AI-powered search results
-- AI-enhanced modal metadata (cast, duration, mood)
-- Fallback curated movie data when AI content is unavailable
-- Poster/backdrop resolution using TMDB paths, with seeded image fallback
+1. Code changes are pushed to the repository.
+2. CI runs tests and build validation.
+3. Security checks run for dependencies, containers, and IaC.
+4. Docker image is built and scanned.
+5. On main branch, validated image is pushed to registry.
+6. Kubernetes manifests are updated for deployment rollout.
+7. Infrastructure is managed as code through Terraform (EKS-ready).
 
-## Project Structure
+## Repository Structure
 
 ```text
 streamgen-ai/
-├── .github/workflows/ci.yml      # GitHub Actions DevSecOps pipeline
-├── components/                   # UI components (Navbar, Hero, Row, Modal, MovieCard)
-├── services/                     # Gemini integration + tests
-├── kubernetes/                   # Deployment + Service manifests
-├── terraform/                    # AWS VPC + private EKS Terraform config
-├── App.tsx                       # Main app orchestration
-├── constants.ts                  # Fallback movie data + genre list
-├── index.tsx                     # React entrypoint
-├── types.ts                      # Shared TypeScript types
-├── Dockerfile                    # Multi-stage build (Node -> Nginx)
-├── Jenkinsfile                   # Jenkins pipeline
-├── vite.config.ts                # Vite config + env injection
+├── .github/workflows/ci.yml   # Main DevSecOps CI/CD + security workflow
+├── Jenkinsfile                # Jenkins-based CI/Sec pipeline alternative
+├── Dockerfile                 # Multi-stage container build
+├── kubernetes/                # Kubernetes Deployment + Service manifests
+├── terraform/                 # AWS VPC + EKS IaC definitions
+├── services/                  # App service integrations + unit tests
+├── components/                # Frontend UI components
 └── README.md
 ```
 
-## Local Development
+## Security Controls in CI/CD
+
+- Unit tests as quality gate (`npm test`)
+- Dependency vulnerability checks (`npm audit`, Snyk)
+- Container image vulnerability scanning (Trivy, Snyk Container)
+- DAST baseline scan (OWASP ZAP)
+- Terraform/IaC security scanning (Trivy config scan)
+
+## CI/CD Secrets (GitHub Actions)
+
+Set these in repository secrets:
+
+- `DOCKER_USERNAME`
+- `DOCKER_PASSWORD`
+- `SNYK_TOKEN`
+- `TOKEN` (used to commit Kubernetes manifest updates)
+
+## Local Development (Application)
+
+The app is included to support DevSecOps validation.
 
 ### Prerequisites
 
@@ -48,109 +64,65 @@ streamgen-ai/
 
 ### Environment
 
-Create/update `.env.local`:
+Create `.env.local`:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
 ```
 
-`vite.config.ts` maps this value to `process.env.API_KEY` at build/runtime.
-
-### Install and run
+### Run locally
 
 ```bash
 npm ci
 npm run dev
 ```
 
-App runs on `http://localhost:3000` (configured in `vite.config.ts`).
+App URL: `http://localhost:3000`
 
-## Scripts
+## Container Workflow
 
-- `npm run dev` - start Vite dev server
-- `npm run build` - create production build in `dist/`
-- `npm run preview` - preview production build locally
-- `npm test` - run Vitest tests
-
-## Testing
-
-Current tests live in:
-
-- `services/geminiService.test.ts`
-
-Run:
-
-```bash
-npm test
-```
-
-## Docker
-
-### Build image
+### Build
 
 ```bash
 docker build -t streamgen-ai:local .
 ```
 
-### Run container
+### Run
 
 ```bash
 docker run --rm -p 3000:80 streamgen-ai:local
 ```
 
-Then open `http://localhost:3000`.
+## Kubernetes Deployment
 
-## CI/CD and Security (GitHub Actions)
+Manifests are in `kubernetes/`:
 
-Workflow file: `.github/workflows/ci.yml`
+- `deployment.yaml`
+- `service.yaml`
 
-Pipeline stages include:
+These manifests are used by the pipeline for deployment updates.
 
-1. Unit testing (`npm test`)
-2. Build (`npm run build`)
-3. Dependency scanning (`npm audit`, Snyk)
-4. Docker image build + scans (Trivy, Snyk Container)
-5. OWASP ZAP baseline DAST scan
-6. Terraform config scan (Trivy)
-7. Docker image push (main branch)
-8. Kubernetes deployment manifest image update (main branch)
+## Infrastructure as Code
 
-### Required GitHub Secrets
+Terraform config in `terraform/main.tf` provisions:
 
-- `DOCKER_USERNAME`
-- `DOCKER_PASSWORD`
-- `SNYK_TOKEN`
-- `TOKEN` (used for committing updated K8s manifest)
+- AWS provider setup
+- VPC module
+- Private EKS cluster module
+- Supporting security group and outputs
 
-## Jenkins Pipeline
+Current default AWS region: `ap-south-1`.
 
-`Jenkinsfile` defines stages for:
+## Sample Application Stack
 
-- Unit testing
-- Build
-- Dependency audit
-- Docker build + Trivy image scan
+The sample app uses:
 
-## Kubernetes
-
-Kubernetes manifests in `kubernetes/`:
-
-- `deployment.yaml` - `streamgen-ai` deployment (2 replicas, container port 80)
-- `service.yaml` - NodePort service exposing port 80
-
-## Terraform
-
-`terraform/main.tf` provisions:
-
-- AWS provider config
-- VPC via `terraform-aws-modules/vpc/aws`
-- Private EKS cluster via `terraform-aws-modules/eks/aws`
-- Additional security group
-- Cluster outputs
-
-Default region in current config: `ap-south-1`.
+- React 19
+- TypeScript
+- Vite 6
+- Vitest
+- Google GenAI SDK (`@google/genai`)
 
 ## Notes
 
-- The workflow includes a lint step (`npm run lint || true`), but no `lint` script currently exists in `package.json`.
-- `index.html` includes Tailwind CDN and an import map; the app itself is bundled by Vite for standard local and CI builds.
+- The workflow references `npm run lint || true`, but a `lint` script is not currently defined in `package.json`.
