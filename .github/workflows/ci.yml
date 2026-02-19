@@ -113,11 +113,10 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=high
 
       - name: Run Snyk Dependency Scan
         uses: snyk/actions/node@master
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -168,7 +167,7 @@ jobs:
         with:
           image-ref: streamgen-ai:${{ steps.vars.outputs.TAG }}
           format: table
-          exit-code: 0
+          exit-code: 1
           severity: CRITICAL,HIGH
 
       - name: Snyk Container Scan
@@ -217,6 +216,7 @@ jobs:
           target: "http://localhost:3000"
           artifact_name: "zap_report"
           allow_issue_writing: false
+          fail_action: true
           cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
   # terraform security scan
@@ -230,13 +230,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Trivy IaC Scan (non-blocking)
+      - name: Run Trivy IaC Scan
         uses: aquasecurity/trivy-action@0.28.0
-        continue-on-error: true
         with:
           scan-type: config
           scan-ref: terraform
           severity: CRITICAL,HIGH,MEDIUM
+          exit-code: 1
           format: table
           ignore-unfixed: true
 
