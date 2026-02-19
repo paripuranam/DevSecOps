@@ -22,10 +22,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks
+      - name: Run Gitleaks (full git history)
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --redact --exit-code 2
+          args: --redact --exit-code=2 --log-opts="--all"
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Gitleaks (repository files)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --redact --exit-code=2 --source=. --no-git
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
