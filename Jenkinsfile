@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node20'
-    }
-
     options {
         timestamps()
         skipDefaultCheckout(true)
