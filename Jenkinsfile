@@ -23,7 +23,6 @@ pipeline {
         }
 
         stage('Validate Prometheus Config') {
-            agent { label 'docker-machine' }
             steps {
                 sh '''
                     docker run --rm \
@@ -62,7 +61,6 @@ pipeline {
         }
 
         stage('Dependency Security Scan') {
-            agent { label 'docker-machine' }
             steps {
                 sh 'npm ci'
                 sh 'npm audit --audit-level=high'
@@ -79,7 +77,6 @@ pipeline {
         }
 
         stage('Docker Build & Security Scan') {
-            agent { label 'docker-machine' }
             steps {
                 sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
                 sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
@@ -96,7 +93,6 @@ pipeline {
         }
 
         stage('OWASP ZAP DAST Scan') {
-            agent { label 'docker-machine' }
             steps {
                 sh '''
                     docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
@@ -129,7 +125,6 @@ pipeline {
         }
 
         stage('Deploy to Docker Hub') {
-            agent { label 'docker-machine' }
             when {
                 branch 'main'
             }
