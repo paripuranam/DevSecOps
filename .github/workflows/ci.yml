@@ -3,7 +3,7 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - main
+      - 
     paths-ignore:
       - kubernetes/**
   pull_request:
@@ -11,6 +11,20 @@ on:
       - main
 
 jobs:
+  prometheus-config-validate:
+    name: Validate Prometheus Config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate prometheus.yml
+        run: |
+          docker run --rm \
+            -v "${PWD}/monitoring:/etc/prometheus:ro" \
+            prom/prometheus:v2.53.3 \
+            promtool check config /etc/prometheus/prometheus.yml
+
   # Secrets scanning
   secret-scan:
     name: Secret Scan (Gitleaks)
@@ -70,7 +84,7 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
-    needs: [test, secret-scan]
+    needs: [test, secret-scan, prometheus-config-validate]
 
     steps:
       - name: Checkout code

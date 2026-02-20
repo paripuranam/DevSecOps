@@ -29,6 +29,8 @@ streamgen-ai/
 ├── .github/workflows/ci.yml   # Main DevSecOps CI/CD + security workflow
 ├── Jenkinsfile                # Jenkins-based CI/Sec pipeline alternative
 ├── Dockerfile                 # Multi-stage container build
+├── docker-compose.monitoring.yml # Prometheus monitoring stack (local)
+├── monitoring/prometheus.yml   # Prometheus scrape configuration
 ├── kubernetes/                # Kubernetes Deployment + Service manifests
 ├── terraform/                 # AWS VPC + EKS IaC definitions
 ├── services/                  # App service integrations + unit tests
@@ -84,6 +86,30 @@ docker build -t streamgen-ai:local .
 
 ```bash
 docker run --rm -p 3000:80 streamgen-ai:local
+```
+
+## Prometheus Monitoring
+
+This repository includes a local Prometheus monitoring stack for host/container metrics and Jenkins metrics.
+
+### Start monitoring stack
+
+```bash
+docker compose -f docker-compose.monitoring.yml up -d
+```
+
+Prometheus UI: `http://localhost:9090`
+
+### What is scraped
+
+- Prometheus itself (`prometheus:9090`)
+- Node Exporter (`node-exporter:9100`)
+- cAdvisor (`cadvisor:8080`)
+
+### Stop monitoring stack
+
+```bash
+docker compose -f docker-compose.monitoring.yml down
 ```
 
 ## Kubernetes Deployment

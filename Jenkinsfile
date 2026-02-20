@@ -1,51 +1,188 @@
 pipeline {
     agent any
 
-    tools { nodejs 'node20' }
+    tools {
+        nodejs 'node20'
+    }
+
+    options {
+        timestamps()
+        skipDefaultCheckout(true)
+    }
+
+    environment {
+        GITLEAKS_VERSION = '8.24.3'
+        IMAGE_NAME = 'streamgen-ai'
+        IMAGE_TAG = ''
+        DOCKERHUB_REPO = ''
+    }
 
     stages {
-        stage('Unit Testing') {
+        stage('Checkout') {
             steps {
                 checkout scm
-                sh 'npm ci && npm test'
+                script {
+                    env.IMAGE_TAG = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+                }
+            }
+        }
+
+        stage('Validate Prometheus Config') {
+            steps {
+                sh '''
+                    docker run --rm \
+                      -v "${WORKSPACE}/monitoring:/etc/prometheus:ro" \
+                      prom/prometheus:v2.53.3 \
+                      promtool check config /etc/prometheus/prometheus.yml
+                '''
+            }
+        }
+
+        stage('Secret Scan (Gitleaks)') {
+            steps {
+                sh '''
+                    curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+                    tar -xzf gitleaks.tar.gz gitleaks
+                    ./gitleaks version
+                    ./gitleaks detect --source . -v --config .gitleaks.toml --redact --exit-code 2 --log-opts="--all"
+                    ./gitleaks detect --source . --config .gitleaks.toml --no-git --redact --exit-code 2
+                '''
+            }
+        }
+
+        stage('Unit Testing') {
+            steps {
+                sh 'npm ci'
+                sh 'npm test'
             }
         }
 
         stage('Build & Test') {
             steps {
-                checkout scm
-                sh 'npm ci && npm run lint || true && npm run build'
+                sh 'npm ci'
+                sh 'npm run lint'
+                sh 'npm run build'
             }
         }
 
         stage('Dependency Security Scan') {
             steps {
-                sh 'npm ci && npm audit --audit-level=high || true'
-            }
-        }
-
-        stage('Docker Build & Scan') {
-            agent { label 'docker-machine' }
-            steps {
-                script {
-                    sh 'docker build -t streamgen-ai:latest .'
-                    sh "trivy image --severity CRITICAL,HIGH --exit-code 0 streamgen-ai:latest"
-                    echo "Docker image built and scanned: streamgen-ai:latest"
+                sh 'npm ci'
+                sh 'npm audit --audit-level=high'
+                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                    sh '''
+                        docker run --rm \
+                          -e SNYK_TOKEN \
+                          -v "${WORKSPACE}:/project" \
+                          -w /project \
+                          snyk/snyk:node test --severity-threshold=medium
+                    '''
                 }
             }
         }
 
-        // stage('Deploy to Docker Hub') {
-        //     when { branch 'main' }
-        //     steps {
-        //         script { 
-        //             docker.withRegistry('', 'docker-credentials-id') {
-        //                 docker.image("streamgen-ai:latest").push()
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Docker Build & Security Scan') {
+            agent { label 'docker-machine' }
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
+                sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}'
+                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                    sh '''
+                        docker run --rm \
+                          -e SNYK_TOKEN \
+                          -v /var/run/docker.sock:/var/run/docker.sock \
+                          snyk/snyk:docker container test ${IMAGE_NAME}:${IMAGE_TAG} --severity-threshold=medium
+                    '''
+                }
+            }
+        }
+
+        stage('OWASP ZAP DAST Scan') {
+            agent { label 'docker-machine' }
+            steps {
+                sh '''
+                    docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
+                    for i in $(seq 1 60); do
+                      if curl -sf http://localhost:3000 >/dev/null 2>&1; then
+                        echo "App is ready"
+                        break
+                      fi
+                      echo "Attempt ${i}: application not ready"
+                      sleep 2
+                    done
+
+                    docker run --rm --network host \
+                      -v "${WORKSPACE}:/zap/wrk/:rw" \
+                      ghcr.io/zaproxy/zaproxy:stable \
+                      zap-baseline.py -t http://localhost:3000 -J report_json.json -w report_md.md -r report_html.html
+                '''
+            }
+            post {
+                always {
+                    sh 'docker rm -f app || true'
+                }
+            }
+        }
+
+        stage('Terraform Security Scan (Trivy)') {
+            steps {
+                sh 'trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 --ignorefile .trivyignore terraform || trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform'
+            }
+        }
+
+        stage('Deploy to Docker Hub') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        echo "DOCKERHUB_REPO=${DOCKER_USERNAME}/${IMAGE_NAME}" > .image_meta
+                    '''
+                }
+                script {
+                    env.DOCKERHUB_REPO = sh(script: "awk -F= '/DOCKERHUB_REPO/ {print \$2}' .image_meta", returnStdout: true).trim()
+                }
+            }
+        }
+
+        stage('Update Kubernetes Deployment') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        if [ -z "${DOCKERHUB_REPO}" ]; then
+                          echo "DOCKERHUB_REPO not found; skipping manifest update"
+                          exit 1
+                        fi
+
+                        NEW_IMAGE="${DOCKERHUB_REPO}:${IMAGE_TAG}"
+                        sed -i "s|image: .*|image: ${NEW_IMAGE}|g" kubernetes/deployment.yaml
+
+                        git config user.name "jenkins"
+                        git config user.email "jenkins@local"
+                        git add kubernetes/deployment.yaml
+                        git commit -m "Update Kubernetes deployment with new image tag: ${IMAGE_TAG}" || true
+
+                        REPO_URL=$(git config --get remote.origin.url | sed 's#https://##')
+                        git push "https://${GITHUB_TOKEN}@${REPO_URL}" HEAD:main
+                    '''
+                }
+            }
+        }
     }
 
-    post { always { echo "Pipeline Completed." } }
+    post {
+        always {
+            sh 'docker rm -f app >/dev/null 2>&1 || true'
+            sh 'rm -f .image_meta'
+            echo 'Pipeline Completed.'
+        }
+    }
 }
