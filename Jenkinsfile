@@ -3,7 +3,6 @@ pipeline {
 
     options {
         timestamps()
-        skipDefaultCheckout(true)
     }
 
     environment {
@@ -24,6 +23,7 @@ pipeline {
         }
 
         stage('Validate Prometheus Config') {
+            agent { label 'docker-machine' }
             steps {
                 sh '''
                     docker run --rm \
@@ -62,6 +62,7 @@ pipeline {
         }
 
         stage('Dependency Security Scan') {
+            agent { label 'docker-machine' }
             steps {
                 sh 'npm ci'
                 sh 'npm audit --audit-level=high'
@@ -128,6 +129,7 @@ pipeline {
         }
 
         stage('Deploy to Docker Hub') {
+            agent { label 'docker-machine' }
             when {
                 branch 'main'
             }
