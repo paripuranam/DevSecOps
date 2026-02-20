@@ -10,6 +10,7 @@ pipeline {
         IMAGE_NAME = 'streamgen-ai'
         IMAGE_TAG = ''
         DOCKERHUB_REPO = ''
+        DOCKER_AVAILABLE = 'false'
     }
 
     stages {
@@ -18,11 +19,16 @@ pipeline {
                 checkout scm
                 script {
                     env.IMAGE_TAG = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+                    env.DOCKER_AVAILABLE = sh(script: 'command -v docker >/dev/null 2>&1 && echo true || echo false', returnStdout: true).trim()
+                    echo "Docker available on this agent: ${env.DOCKER_AVAILABLE}"
                 }
             }
         }
 
         stage('Validate Prometheus Config') {
+            when {
+                expression { env.DOCKER_AVAILABLE == 'true' }
+            }
             steps {
                 sh '''
                     docker run --rm \
@@ -64,19 +70,28 @@ pipeline {
             steps {
                 sh 'npm ci'
                 sh 'npm audit --audit-level=high'
-                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
-                    sh '''
-                        docker run --rm \
-                          -e SNYK_TOKEN \
-                          -v "${WORKSPACE}:/project" \
-                          -w /project \
-                          snyk/snyk:node test --severity-threshold=medium
-                    '''
+                script {
+                    if (env.DOCKER_AVAILABLE == 'true') {
+                        withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                            sh '''
+                                docker run --rm \
+                                  -e SNYK_TOKEN \
+                                  -v "${WORKSPACE}:/project" \
+                                  -w /project \
+                                  snyk/snyk:node test --severity-threshold=medium
+                            '''
+                        }
+                    } else {
+                        echo 'Skipping Snyk dependency scan because Docker is not available on this agent.'
+                    }
                 }
             }
         }
 
         stage('Docker Build & Security Scan') {
+            when {
+                expression { env.DOCKER_AVAILABLE == 'true' }
+            }
             steps {
                 sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
                 sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
@@ -93,6 +108,9 @@ pipeline {
         }
 
         stage('OWASP ZAP DAST Scan') {
+            when {
+                expression { env.DOCKER_AVAILABLE == 'true' }
+            }
             steps {
                 sh '''
                     docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
@@ -126,7 +144,10 @@ pipeline {
 
         stage('Deploy to Docker Hub') {
             when {
-                branch 'main'
+                allOf {
+                    branch 'main'
+                    expression { env.DOCKER_AVAILABLE == 'true' }
+                }
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -145,7 +166,10 @@ pipeline {
 
         stage('Update Kubernetes Deployment') {
             when {
-                branch 'main'
+                allOf {
+                    branch 'main'
+                    expression { env.DOCKER_AVAILABLE == 'true' }
+                }
             }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
