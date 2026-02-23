@@ -1,14 +1,16 @@
 name: DevSecOps Pipeline
 
 on:
-  push:
-    branches:
-      - 
-    paths-ignore:
-      - kubernetes/**
-  pull_request:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - 
+  #   paths-ignore:
+  #     - kubernetes/**
+  # pull_request:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+    
 
 jobs:
   prometheus-config-validate:

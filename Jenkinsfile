@@ -160,24 +160,17 @@ pipeline {
             }
         }
        stage('Terraform Security Scan (Trivy)') {
+            agent {
+                docker {
+                    image 'aquasec/trivy:latest'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''
-                    pwd
                     ls -la
                     test -d terraform || { echo "terraform directory not found in workspace"; exit 1; }
-
-                    docker run --rm \
-                    -v "${PWD}:/workspace:ro" \
-                    alpine:3.20 \
-                    ls -la /workspace
-
-                    docker run --rm \
-                    -v "${PWD}:/workspace:ro" \
-                    -w /workspace \
-                    aquasec/trivy config \
-                    --severity CRITICAL,HIGH,MEDIUM \
-                    --exit-code 1 \
-                    /workspace/terraform
+                    trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform
                 '''
             }
         }
