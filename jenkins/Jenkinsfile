@@ -64,6 +64,11 @@ pipeline {
         }
 
         stage('Build & Test') {
+            agent {
+                docker {
+                image 'node:20-alpine'
+                }
+            }
             steps {
                 sh 'npm ci'
                 sh 'npm run lint'
@@ -72,6 +77,11 @@ pipeline {
         }
 
         stage('Dependency Security Scan') {
+            agent {
+                docker {
+                image 'node:20-alpine'
+                }
+            }
             steps {
                 sh 'npm ci'
                 sh 'npm audit --audit-level=high'
