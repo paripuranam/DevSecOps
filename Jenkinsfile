@@ -191,6 +191,12 @@ pipeline {
         }
 
         stage('Deploy to Docker Hub') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { env.DOCKER_AVAILABLE == 'true' }
+                }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh '''
@@ -207,12 +213,18 @@ pipeline {
         }
         
         stage('Update Kubernetes Deployment') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { env.DOCKER_AVAILABLE == 'true' }
+                }
+            }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         if [ -z "${DOCKERHUB_REPO}" ]; then
                           echo "DOCKERHUB_REPO not found; skipping manifest update"
-                          exit 1
+                          exit 0
                         fi
 
                         NEW_IMAGE="${DOCKERHUB_REPO}:${IMAGE_TAG}"
