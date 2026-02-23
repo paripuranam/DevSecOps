@@ -104,9 +104,6 @@ pipeline {
         }
 
         stage('Docker Build & Security Scan') {
-            when {
-                expression { env.DOCKER_AVAILABLE == 'true' }
-            }
             steps {
                 sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ../.'
                 sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
@@ -123,9 +120,6 @@ pipeline {
         }
 
         stage('OWASP ZAP DAST Scan') {
-            when {
-                expression { env.DOCKER_AVAILABLE == 'true' }
-            }
             steps {
                 sh '''
                     docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
