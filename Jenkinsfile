@@ -171,7 +171,10 @@ pipeline {
                 sh '''
                     ls -la
                     test -d terraform || { echo "terraform directory not found in workspace"; exit 1; }
-                    trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform
+                    export HOME=/tmp
+                    export XDG_CACHE_HOME=/tmp/.cache
+                    mkdir -p /tmp/trivy-cache /tmp/.cache
+                    trivy config --cache-dir /tmp/trivy-cache --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform
                 '''
             }
         }
