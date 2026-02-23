@@ -8,7 +8,7 @@ pipeline {
     environment {
         GITLEAKS_VERSION = '8.24.3'
         IMAGE_NAME = 'streamgen-ai'
-        IMAGE_TAG = 'latest'
+        IMAGE_TAG = 'unset'
         DOCKERHUB_REPO = 'paripuranam/streamgen-ai'
         DOCKER_AVAILABLE = 'false'
     }
@@ -18,8 +18,11 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    env.IMAGE_TAG = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+                    String shortSha = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+                    String branchName = (env.BRANCH_NAME ?: 'local').toLowerCase().replaceAll(/[^a-z0-9_.-]/, '-')
+                    env.IMAGE_TAG = "${branchName}-${env.BUILD_NUMBER}-${shortSha}"
                     env.DOCKER_AVAILABLE = sh(script: 'command -v docker >/dev/null 2>&1 && echo true || echo false', returnStdout: true).trim()
+                    echo "Using dynamic image tag: ${env.IMAGE_TAG}"
                     echo "Docker available on this agent: ${env.DOCKER_AVAILABLE}"
                 }
             }
