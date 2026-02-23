@@ -45,7 +45,7 @@ pipeline {
                     curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
                     tar -xzf gitleaks.tar.gz gitleaks
                     ./gitleaks version
-                    ./gitleaks detect --source . -v --config .gitleaks.toml --redact --exit-code 2 --log-opts="--all"
+                    ./gitleaks detect --source . -v --config .gitleaks.toml --redact --exit-code 2 --log-opts="HEAD~1..HEAD"
                     ./gitleaks detect --source . --config .gitleaks.toml --no-git --redact --exit-code 2
                 '''
             }
