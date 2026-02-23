@@ -146,6 +146,7 @@ pipeline {
                     ghcr.io/zaproxy/zaproxy:stable \
                     zap-baseline.py \
                     -t http://10.10.1.94:3000 \
+                    -I \
                     -J report_json.json \
                     -w report_md.md \
                     -r report_html.html
@@ -153,6 +154,7 @@ pipeline {
             }
             post {
                 always {
+                    archiveArtifacts artifacts: '*.html, *.json, *.md', fingerprint: true
                     sh 'docker rm -f app || true'
                 }
             }
