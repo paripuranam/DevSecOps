@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: streamgen-ai
-        image: paripuranam/streamgen-ai:latest
+        image: paripuranam/streamgen-ai:unset
         ports:
         - containerPort: 80
         resources:
