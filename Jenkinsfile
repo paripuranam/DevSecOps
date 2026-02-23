@@ -159,9 +159,17 @@ pipeline {
                 }
             }
         }
-        stage('Terraform Security Scan (Trivy)') {
+       stage('Terraform Security Scan (Trivy)') {
             steps {
-                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 --ignorefile .trivyignore terraform || trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform'
+                sh '''
+                    docker run --rm \
+                    -v "${WORKSPACE}:/workspace" \
+                    -w /workspace \
+                    aquasec/trivy config \
+                    --severity CRITICAL,HIGH,MEDIUM \
+                    --exit-code 1 \
+                    terraform
+                '''
             }
         }
 
