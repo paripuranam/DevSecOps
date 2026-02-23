@@ -162,7 +162,8 @@ pipeline {
        stage('Terraform Security Scan (Trivy)') {
             agent {
                 docker {
-                    image 'aquasec/trivy:latest'
+                    image 'aquasec/trivy:0.51.4'
+                    args '--entrypoint=""'
                     reuseNode true
                 }
             }
