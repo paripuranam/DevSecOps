@@ -26,16 +26,19 @@ pipeline {
         }
 
         stage('Validate Prometheus Config') {
-            when {
-                expression { env.DOCKER_AVAILABLE == 'true' }
-            }
             steps {
-                sh '''
-                    docker run --rm \
-                      -v "${WORKSPACE}/monitoring:/etc/prometheus:ro" \
-                      prom/prometheus:v2.53.3 \
-                      promtool check config /etc/prometheus/prometheus.yml
-                '''
+                script {
+                    if (env.DOCKER_AVAILABLE == 'true') {
+                        sh '''
+                            docker run --rm \
+                              -v "${WORKSPACE}/monitoring:/etc/prometheus:ro" \
+                              prom/prometheus:v2.53.3 \
+                              promtool check config /etc/prometheus/prometheus.yml
+                        '''
+                    } else {
+                        echo 'Docker not available; skipping Prometheus validation command.'
+                    }
+                }
             }
         }
 
@@ -191,12 +194,6 @@ pipeline {
         }
 
         stage('Deploy to Docker Hub') {
-            when {
-                allOf {
-                    branch 'main'
-                    expression { env.DOCKER_AVAILABLE == 'true' }
-                }
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh '''
@@ -213,12 +210,6 @@ pipeline {
         }
         
         stage('Update Kubernetes Deployment') {
-            when {
-                allOf {
-                    branch 'main'
-                    expression { env.DOCKER_AVAILABLE == 'true' }
-                }
-            }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
