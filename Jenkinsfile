@@ -52,6 +52,11 @@ pipeline {
         }
 
         stage('Unit Testing') {
+            agent {
+                docker {
+                image 'node:20'
+                }
+            }
             steps {
                 sh 'npm ci'
                 sh 'npm test'
