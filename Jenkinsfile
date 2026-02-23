@@ -126,23 +126,29 @@ pipeline {
             }
         }
 
-        stage('OWASP ZAP DAST Scan') {
+       stage('OWASP ZAP DAST Scan') {
             steps {
                 sh '''
                     docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
+
                     for i in $(seq 1 60); do
-                      if curl -sf http://10.10.1.94:3000 >/dev/null 2>&1; then
+                    if curl -sf http://10.10.1.94:3000 >/dev/null 2>&1; then
                         echo "App is ready"
                         break
-                      fi
-                      echo "Attempt ${i}: application not ready"
-                      sleep 2
+                    fi
+                    echo "Attempt ${i}: application not ready"
+                    sleep 2
                     done
 
                     docker run --rm --network host \
-                      -v "${WORKSPACE}:/zap/wrk/:rw" \
-                      ghcr.io/zaproxy/zaproxy:stable \
-                      zap-baseline.py -t http://localhost:3000 -J report_json.json -w report_md.md -r report_html.html
+                    --user root \
+                    -v "${WORKSPACE}:/zap/wrk/:rw" \
+                    ghcr.io/zaproxy/zaproxy:stable \
+                    zap-baseline.py \
+                    -t http://10.10.1.94:3000 \
+                    -J report_json.json \
+                    -w report_md.md \
+                    -r report_html.html
                 '''
             }
             post {
@@ -151,7 +157,6 @@ pipeline {
                 }
             }
         }
-
         stage('Terraform Security Scan (Trivy)') {
             steps {
                 sh 'trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 --ignorefile .trivyignore terraform || trivy config --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform'
