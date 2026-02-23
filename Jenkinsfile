@@ -107,7 +107,14 @@ pipeline {
             steps {
                 sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
                 sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
-                sh 'docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}'
+                sh """
+                docker run --rm \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy image \
+                --severity CRITICAL,HIGH \
+                --exit-code 1 \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+                """
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
                     sh '''
                         docker run --rm \
