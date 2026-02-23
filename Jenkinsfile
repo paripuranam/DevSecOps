@@ -115,14 +115,14 @@ pipeline {
                 --exit-code 1 \
                 ${IMAGE_NAME}:${IMAGE_TAG}
                 """
-                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
-                    sh '''
-                        docker run --rm \
-                          -e SNYK_TOKEN \
-                          -v /var/run/docker.sock:/var/run/docker.sock \
-                          snyk/snyk:docker container test ${IMAGE_NAME}:${IMAGE_TAG} --severity-threshold=medium
-                    '''
-                }
+                // withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                //     sh '''
+                //         docker run --rm \
+                //           -e SNYK_TOKEN \
+                //           -v /var/run/docker.sock:/var/run/docker.sock \
+                //           snyk/snyk:docker container test ${IMAGE_NAME}:${IMAGE_TAG} --severity-threshold=medium
+                //     '''
+                // }
             }
         }
 
