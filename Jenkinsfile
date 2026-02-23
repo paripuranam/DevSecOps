@@ -218,8 +218,8 @@ pipeline {
                         NEW_IMAGE="${DOCKERHUB_REPO}:${IMAGE_TAG}"
                         sed -i "s|image: .*|image: ${NEW_IMAGE}|g" kubernetes/deployment.yaml
 
-                        git config user.name "jenkins"
-                        git config user.email "jenkins@local"
+                        git config user.name "paripuranam"
+                        git config user.email "paripuranam333@gmail.com"
                         git add kubernetes/deployment.yaml
                         git commit -m "Update Kubernetes deployment with new image tag: ${IMAGE_TAG}" || true
 
