@@ -131,7 +131,7 @@ pipeline {
                 sh '''
                     docker run -d --name app -p 3000:80 ${IMAGE_NAME}:${IMAGE_TAG}
                     for i in $(seq 1 60); do
-                      if curl -sf http://localhost:3000 >/dev/null 2>&1; then
+                      if curl -sf http://10.10.1.94:3000 >/dev/null 2>&1; then
                         echo "App is ready"
                         break
                       fi
