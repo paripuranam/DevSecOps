@@ -161,6 +161,7 @@ pipeline {
         }
        stage('Terraform Security Scan (Trivy)') {
             steps {
+                sh 'ls -la'
                 sh '''
                     docker run --rm \
                     -v "${WORKSPACE}:/workspace" \
