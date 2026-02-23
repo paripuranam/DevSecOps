@@ -9,7 +9,7 @@ pipeline {
         GITLEAKS_VERSION = '8.24.3'
         IMAGE_NAME = 'streamgen-ai'
         IMAGE_TAG = 'latest'
-        DOCKERHUB_REPO = ''
+        DOCKERHUB_REPO = 'paripuranam/streamgen-ai'
         DOCKER_AVAILABLE = 'false'
     }
 
