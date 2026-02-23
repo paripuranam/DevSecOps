@@ -105,7 +105,7 @@ pipeline {
 
         stage('Docker Build & Security Scan') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ../.'
+                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
                 sh 'docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_NAME}.tar'
                 sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}'
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
