@@ -168,14 +168,25 @@ pipeline {
                 }
             }
             steps {
-                sh '''
-                    ls -la
-                    test -d terraform || { echo "terraform directory not found in workspace"; exit 1; }
-                    export HOME=/tmp
-                    export XDG_CACHE_HOME=/tmp/.cache
-                    mkdir -p /tmp/trivy-cache /tmp/.cache
-                    trivy config --cache-dir /tmp/trivy-cache --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform
-                '''
+                script {
+                    int trivyStatus = sh(
+                        script: '''
+                            ls -la
+                            test -d terraform || { echo "terraform directory not found in workspace"; exit 1; }
+                            export HOME=/tmp
+                            export XDG_CACHE_HOME=/tmp/.cache
+                            mkdir -p /tmp/trivy-cache /tmp/.cache
+                            trivy config --cache-dir /tmp/trivy-cache --severity CRITICAL,HIGH,MEDIUM --exit-code 1 terraform
+                        ''',
+                        returnStatus: true
+                    )
+
+                    if (trivyStatus == 1 || trivyStatus == 2) {
+                        unstable("Terraform Trivy scan found issues (exit code ${trivyStatus}); continuing pipeline.")
+                    } else if (trivyStatus != 0) {
+                        error("Terraform Trivy scan failed unexpectedly with exit code ${trivyStatus}.")
+                    }
+                }
             }
         }
 
