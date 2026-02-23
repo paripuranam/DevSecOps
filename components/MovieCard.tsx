@@ -8,7 +8,7 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isLarge = false }) => {
-  // Always use the poster (imageUrl) for the card grid to ensure alignment.
+  // Always use the poster (imageUrl) for the card grid to ensure alignment
     const displayImage = movie.imageUrl;
 
   return (
