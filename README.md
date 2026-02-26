@@ -14,6 +14,8 @@ This repository is primarily a **DevSecOps implementation project**.
 
 ## End-to-End DevSecOps Flow
 
+![End-to-End DevSecOps Flowchart](docs/project-flowchart.svg)
+
 1. Code changes are pushed to the repository.
 2. CI runs tests and build validation.
 3. Security checks run for dependencies, containers, and IaC.
