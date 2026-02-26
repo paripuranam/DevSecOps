@@ -88,28 +88,57 @@ docker build -t streamgen-ai:local .
 docker run --rm -p 3000:80 streamgen-ai:local
 ```
 
-## Prometheus Monitoring
+# Prometheus Monitoring
 
-This repository includes a local Prometheus monitoring stack for host/container metrics and Jenkins metrics.
+This repository includes a **Prometheus + Grafana monitoring stack** for:
 
-### Start monitoring stack
+- Host metrics
+- Container metrics
+- Kubernetes metrics
+- Jenkins metrics
+
+It uses the official `kube-prometheus-stack` Helm chart from the Prometheus Community.
+
+---
+
+## Prerequisites
+
+- A running Kubernetes cluster
+- `kubectl` configured
+- Helm installed
+
+---
+
+## Install Helm (if not installed)
 
 ```bash
-docker compose -f docker-compose.monitoring.yml up -d
+sudo snap install helm --classic
 ```
 
-Prometheus UI: `http://localhost:9090`
-
-### What is scraped
-
-- Prometheus itself (`prometheus:9090`)
-- Node Exporter (`node-exporter:9100`)
-- cAdvisor (`cadvisor:8080`)
-
-### Stop monitoring stack
+## Verify installation:
 
 ```bash
-docker compose -f docker-compose.monitoring.yml down
+helm version
+```
+
+## Add the Prometheus Helm Repository
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+```
+
+## Install the Monitoring Stack
+
+```bash
+kubectl create namespace monitoring
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring
+```
+## Verify Installation
+
+```bash
+kubectl get pods -n monitoring
 ```
 
 ## Kubernetes Deployment
