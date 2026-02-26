@@ -31,7 +31,6 @@ streamgen-ai/
 ├── .github/workflows/ci.yml   # Main DevSecOps CI/CD + security workflow
 ├── Jenkinsfile                # Jenkins-based CI/Sec pipeline alternative
 ├── Dockerfile                 # Multi-stage container build
-├── docker-compose.monitoring.yml # Prometheus monitoring stack (local)
 ├── kubernetes/                # Kubernetes Deployment + Service manifests
 ├── terraform/                 # AWS VPC + EKS IaC definitions
 ├── services/                  # App service integrations + unit tests
