@@ -169,7 +169,6 @@ The sample app uses:
 - TypeScript
 - Vite 6
 - Vitest
-- Google GenAI SDK (`@google/genai`)
 
 ## Notes
 
