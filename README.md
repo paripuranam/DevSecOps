@@ -20,7 +20,7 @@ This repository is primarily a **DevSecOps implementation project**.
 2. CI runs tests and build validation.
 3. Security checks run for dependencies, containers, and IaC.
 4. Docker image is built and scanned.
-5. On main branch, validated image is pushed to registry.
+5. Validated image is pushed to registry.
 6. Kubernetes manifests are updated for deployment rollout.
 7. Infrastructure is managed as code through Terraform (EKS-ready).
 
@@ -31,6 +31,7 @@ streamgen-ai/
 ├── .github/workflows/ci.yml   # Main DevSecOps CI/CD + security workflow
 ├── Jenkinsfile                # Jenkins-based CI/Sec pipeline alternative
 ├── Dockerfile                 # Multi-stage container build
+├── docs/project-flowchart.svg # Pipeline flowchart
 ├── kubernetes/                # Kubernetes Deployment + Service manifests
 ├── terraform/                 # AWS VPC + EKS IaC definitions
 ├── services/                  # App service integrations + unit tests
@@ -88,7 +89,7 @@ docker build -t streamgen-ai:local .
 docker run --rm -p 3000:80 streamgen-ai:local
 ```
 
-# Prometheus Monitoring
+## Prometheus Monitoring
 
 This repository includes a **Prometheus + Grafana monitoring stack** for:
 
@@ -172,4 +173,4 @@ The sample app uses:
 
 ## Notes
 
-- The workflow references `npm run lint || true`, but a `lint` script is not currently defined in `package.json`.
+- Image tags are generated dynamically in the Jenkins pipeline (`branch-buildNumber-shortSha`).
