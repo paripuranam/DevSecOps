@@ -463,7 +463,7 @@ jobs:
   deploy:
     name: Deploy to Docker Hub
     runs-on: ubuntu-latest
-    needs: [sonarqube-scan, iac-scan-checkov, sbom-scan, image-sign, zap-dast]
+    needs: [iac-scan-checkov, sbom-scan, image-sign, zap-dast, docker-build-and-scan]
     if: github.ref == 'refs/heads/main'
 
     steps:
