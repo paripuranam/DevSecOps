@@ -317,24 +317,21 @@ jobs:
       - name: Load Docker image
         run: docker load -i streamgen-ai.tar
 
-      # - name: Install Syft
-      #   run: |
-      #     SYFT_VERSION="1.0.1"
-      #     curl -sSL "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" -o syft.tar.gz
-      #     mkdir -p "$RUNNER_TEMP/bin"
-      #     tar -xzf syft.tar.gz -C "$RUNNER_TEMP/bin" syft
-      #     echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-      #     syft version
-
-      # - name: Generate SBOM (SPDX)
-      #   run: |
-      #     syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json
-      #     syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o cyclonedx-json > streamgen-ai-sbom.cdx.json
-
-      - name: SBOM Generate (SPDX)
+      - name: Install Syft
         run: |
-          docker pull anchore/syft:v1.42.1-debug 
-          docker run --rm -v "${PWD}:/work" anchore/syft:v1.42.1-debug syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json 
+          SYFT_VERSION="1.0.1"
+          curl -sSfL https://get.anchore.io/syft | sudo sh -s -- -b /usr/local/bin
+          syft version
+
+      - name: Generate SBOM (SPDX)
+        run: |
+          syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json
+          syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o cyclonedx-json > streamgen-ai-sbom.cdx.json
+
+      # - name: SBOM Generate (SPDX)
+      #   run: |
+      #     docker pull anchore/syft:v1.42.1-debug 
+      #     docker run --rm -v "${PWD}:/work" anchore/syft:v1.42.1-debug syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json 
 
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4
