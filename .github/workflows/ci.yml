@@ -317,19 +317,24 @@ jobs:
       - name: Load Docker image
         run: docker load -i streamgen-ai.tar
 
-      - name: Install Syft
-        run: |
-          SYFT_VERSION="1.0.1"
-          curl -sSL "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" -o syft.tar.gz
-          mkdir -p "$RUNNER_TEMP/bin"
-          tar -xzf syft.tar.gz -C "$RUNNER_TEMP/bin" syft
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-          syft version
+      # - name: Install Syft
+      #   run: |
+      #     SYFT_VERSION="1.0.1"
+      #     curl -sSL "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" -o syft.tar.gz
+      #     mkdir -p "$RUNNER_TEMP/bin"
+      #     tar -xzf syft.tar.gz -C "$RUNNER_TEMP/bin" syft
+      #     echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      #     syft version
 
-      - name: Generate SBOM (SPDX)
+      # - name: Generate SBOM (SPDX)
+      #   run: |
+      #     syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json
+      #     syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o cyclonedx-json > streamgen-ai-sbom.cdx.json
+
+      - name: SBOM Generate (SPDX)
         run: |
-          syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json
-          syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o cyclonedx-json > streamgen-ai-sbom.cdx.json
+          docker pull anchore/syft:v1.42.1-debug 
+          docker run --rm -v "${PWD}:/work" anchore/syft:v1.42.1-debug syft streamgen-ai:${{ steps.vars.outputs.TAG }} -o spdx-json > streamgen-ai-sbom.spdx.json 
 
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4
@@ -348,26 +353,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Grype
-        run: |
-          GRYPE_VERSION="0.77.0"
-          curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz" -o grype.tar.gz
-          mkdir -p "$RUNNER_TEMP/bin"
-          tar -xzf grype.tar.gz -C "$RUNNER_TEMP/bin" grype
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-          grype version
+      # - name: Install Grype
+      #   run: |
+      #     GRYPE_VERSION="0.77.0"
+      #     curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz" -o grype.tar.gz
+      #     mkdir -p "$RUNNER_TEMP/bin"
+      #     tar -xzf grype.tar.gz -C "$RUNNER_TEMP/bin" grype
+      #     echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      #     grype version
 
       - name: Download SBOM artifacts
         uses: actions/download-artifact@v4
         with:
           name: sbom-reports
 
+      # - name: Scan SBOM with Grype
+      #   run: |
+      #     grype sbom:streamgen-ai-sbom.spdx.json -o json > grype-report.json
+      #     grype sbom:streamgen-ai-sbom.spdx.json -o table
+      #   continue-on-error: true
       - name: Scan SBOM with Grype
         run: |
-          grype sbom:streamgen-ai-sbom.spdx.json -o json > grype-report.json
-          grype sbom:streamgen-ai-sbom.spdx.json -o table
+          docker pull anchore/grype:v0.77.0-debug
+          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug grype sbom:streamgen-ai-sbom.spdx.json -o json > grype-report.json
+          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug grype sbom:streamgen-ai-sbom.spdx.json -o table
         continue-on-error: true
-
+        
       - name: Upload Grype Report
         uses: actions/upload-artifact@v4
         with:
