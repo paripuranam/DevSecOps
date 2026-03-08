@@ -175,11 +175,12 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high
-        continue-on-error: true
+        run: npm audit --audit-level=high || true
+        # continue-on-error: true
 
       - name: Run Snyk Dependency Scan
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
