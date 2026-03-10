@@ -372,8 +372,8 @@ jobs:
       - name: Scan SBOM with Grype
         run: |
           docker pull anchore/grype:v0.77.0-debug
-          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug sbom:streamgen-ai-sbom.spdx.json -o json > grype-report.json
-          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug sbom:streamgen-ai-sbom.spdx.json -o table
+          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug /work/streamgen-ai-sbom.spdx.json -o json > grype-report.json
+          docker run --rm -v "${PWD}:/work" anchore/grype:v0.77.0-debug /work/streamgen-ai-sbom.spdx.json -o table
         continue-on-error: true
         
       - name: Upload Grype Report
