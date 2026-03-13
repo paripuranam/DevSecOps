@@ -23,6 +23,6 @@ RUN addgroup -S appgroup -g 1001 && \
 
 RUN chown -R appuser:appgroup /usr/share/nginx/html/
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
