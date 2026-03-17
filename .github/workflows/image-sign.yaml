@@ -61,13 +61,16 @@ jobs:
       - name: Load Docker image
         run: docker load -i streamgen-ai.tar
 
-      - name: Sign Docker Image
-        uses: docker://gcr.io/projectsigstore/cosign:latest
-        with:
-          args: sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign Image
+        run: cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
         env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-      - name: Verify Docker Image Signature
-        uses: docker://gcr.io/projectsigstore/cosign:latest
-        with:
-            args: verify --key ${{ secrets.COSIGN_PUBLIC_KEY }} streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
+            COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+
+      - name: Verify Image Signature
+        run: |
+            cosign verify \
+            --key ${{ secrets.COSIGN_PUBLIC_KEY }} \
+            streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
