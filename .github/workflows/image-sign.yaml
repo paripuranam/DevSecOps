@@ -96,6 +96,7 @@ jobs:
           run: |
             cosign sign \
             --yes \
+            --upload=false \
             --key cosign.key \
             ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
 
