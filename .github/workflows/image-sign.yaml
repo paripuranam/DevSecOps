@@ -63,13 +63,14 @@ jobs:
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
+         
+      - name: Write signing key to disk
+        run: 'echo "$KEY" > cosign.key'
+        shell: bash
+        env:
+          KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
-      - name: Sign Image (keyless)
-        run: cosign sign --yes streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
-
-      - name: Verify Image (keyless)
-        run: |
-            cosign verify \
-            --certificate-identity ${{ github.actor }} \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
+      - name: Sign the published Docker image
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: cosign sign --key cosign.key streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
