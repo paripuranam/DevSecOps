@@ -20,3 +20,5 @@ jobs:
           args: >
             -Dsonar.projectKey=devsecops-ci-key
             -Dsonar.organization=paripuranam
+            -Dsonar.branch.name=test
+            -Dsonar.branch.target=main
