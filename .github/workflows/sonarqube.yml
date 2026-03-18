@@ -18,7 +18,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=devsecops-ci-key
+            -Dsonar.projectKey=paripuranam_devsecops-project
             -Dsonar.organization=paripuranam
             -Dsonar.branch.name=test
             -Dsonar.branch.target=main
