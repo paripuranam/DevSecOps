@@ -3,7 +3,7 @@ name: image-sign
 on:
   push:
     branches:
-      - test
+      - dev
   workflow_dispatch:
 
 jobs:

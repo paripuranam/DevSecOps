@@ -3,7 +3,7 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - dev
+      - test
     paths-ignore:
       - kubernetes/**
   # pull_request:
@@ -13,24 +13,6 @@ on:
     
 
 jobs:
-  # ============================================================================
-  # STAGE 1: Quick Validation & Setup (Parallel)
-  # ============================================================================
-
-  # prometheus-config-validate:
-  #   name: Validate Prometheus Config
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Validate prometheus.yml
-  #       run: |
-  #         docker run --rm \
-  #           -v "${PWD}/monitoring:/etc/prometheus:ro" \
-  #           prom/prometheus:v2.53.3 \
-  #           promtool check config /etc/prometheus/prometheus.yml
-
   # Secrets scanning
   secret-scan:
     name: Secret Scan (Gitleaks)
@@ -86,9 +68,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-  # ============================================================================
-  # STAGE 2: Build & Initial Security Scans
-  # ============================================================================
+  # Build & Initial Security Scans
 
   build-and-test:
     name: Build & Test
@@ -121,33 +101,31 @@ jobs:
       - name: Build project
         run: npm run build
 
-  # ============================================================================
-  # STAGE 3: Source Code & Dependency Scanning (Parallel after Build)
-  # ============================================================================
+  # Source Code & Dependency Scanning (Parallel after Build)
 
-  # sonarqube-scan:
-  #   name: SonarQube SAST Scan
-  #   runs-on: ubuntu-latest
-  #   needs: build-and-test
+  sonarqube-scan:
+    name: SonarQube SAST Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     - name: Run SonarQube Scan
-  #       uses: SonarSource/sonarqube-scan-action@master
-  #       env:
-  #         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #       continue-on-error: true
+      - name: Run SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
 
-  #     - name: SonarQube Quality Gate
-  #       uses: SonarSource/sonarqube-quality-gate-action@master
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #       continue-on-error: true
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          #continue-on-error: true
 
   dependency-scan:
     name: Dependency Security Scan
@@ -186,25 +164,8 @@ jobs:
         with:
           command: test
           args: --severity-threshold=medium
-
-  # terraform-scan:
-  #   name: Terraform Security Scan (Trivy)
-  #   runs-on: ubuntu-latest
-  #   needs: build-and-test
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Run Trivy IaC Scan
-  #       uses: aquasecurity/trivy-action@0.28.0
-  #       with:
-  #         scan-type: config
-  #         scan-ref: terraform
-  #         severity: CRITICAL,HIGH,MEDIUM
-  #         # exit-code: 1
-  #         format: table
-  #         ignore-unfixed: true
+  
+  # IaC Scanning
 
   iac-scan-checkov:
     name: IaC Security Scan (Checkov)
@@ -233,9 +194,7 @@ jobs:
           path: terraform-checkov-report.json
         continue-on-error: true
 
-  # ============================================================================
-  # STAGE 4: Docker Build & Container Security
-  # ============================================================================
+  # Docker Build & Container Security
 
   docker-build-and-scan:
     name: Docker Build & Security Scan
@@ -290,9 +249,7 @@ jobs:
           image: streamgen-ai:${{ steps.vars.outputs.TAG }}
           args: --severity-threshold=medium
 
-  # ============================================================================
-  # STAGE 5: SBOM Generation & Scanning
-  # ============================================================================
+  # SBOM Generation & Scanning
 
   sbom-generate:
     name: SBOM Generation (Syft)
@@ -382,50 +339,7 @@ jobs:
           name: grype-report
           path: grype-report.json
 
-  # ============================================================================
-  # STAGE 6: Image Signing & DAST Testing
-  # ============================================================================
-
-  # image-sign:
-  #   name: Image Signing (Cosign)
-  #   runs-on: ubuntu-latest
-  #   needs: sbom-scan
-  #   if: github.ref == 'refs/heads/main'
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Download Docker image
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: streamgen-ai
-
-  #     - name: Load Docker image
-  #       run: docker load -i streamgen-ai.tar
-
-  #     - name: Log in to Docker Hub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # - name: Install Cosign
-      #   run: |
-      #     COSIGN_VERSION="2.4.1"
-      #     curl -sSL "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" -o cosign
-      #     chmod +x cosign
-      #     mkdir -p "$RUNNER_TEMP/bin"
-      #     mv cosign "$RUNNER_TEMP/bin/"
-      #     echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-      #     cosign version
-
-      # - name: Sign Docker image
-      #   run: |
-      #     cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
-      #   env:
-      #     COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-      #   continue-on-error: true
+  # DAST Testing
 
   zap-dast:
     name: OWASP ZAP DAST Scan
@@ -466,9 +380,7 @@ jobs:
           # fail_action: true
           cmd_options: -J report_json.json -w report_md.md -r report_html.html --autooff
 
-  # ============================================================================
-  # STAGE 7: Deployment
-  # ============================================================================
+  # Deployment & Image Signing
 
   deploy:
     name: Deploy to Docker Hub
@@ -498,6 +410,42 @@ jobs:
         run: |
           docker tag streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }} ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
           docker push ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
+  sign-image:
+    name: Image signing & verification
+    runs-on: ubuntu-latest
+    needs: [deploy, docker-build-and-scan]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+        - name: Install Cosign
+          uses: sigstore/cosign-installer@v3
+
+        - name: Log in to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
+
+        - name: Write private key
+          run: echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+
+        - name: Write public key
+          run: echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
+
+        - name: Sign the published Docker image
+          env:
+            COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          run: |
+            cosign sign \
+            --yes \
+            --key cosign.key \
+            ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
+
+        - name: Verify the signed image
+          run: |
+            cosign verify \
+            --key cosign.pub \
+            ${{ secrets.DOCKER_USERNAME }}/streamgen-ai:${{ needs.docker-build-and-scan.outputs.image_tag }}
 
   update-k8s:
     name: Update Kubernetes Deployment
