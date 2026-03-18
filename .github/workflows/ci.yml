@@ -3,7 +3,7 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - test
+      - dev
     paths-ignore:
       - kubernetes/**
   # pull_request:
