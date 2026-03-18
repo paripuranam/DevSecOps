@@ -22,3 +22,4 @@ jobs:
             -Dsonar.organization=paripuranam
             -Dsonar.branch.name=test
             -Dsonar.branch.target=main
+            -Dsonar.branch.type=long-lived
