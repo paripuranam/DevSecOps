@@ -18,7 +18,7 @@ spec:
       - name: streamgen-ai
         image: paripuranam/streamgen-ai:unset
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         resources:
           limits:
             memory: "512Mi"
