@@ -28,6 +28,7 @@ Thumbs.db
 # TypeScript
 # -----------------------
 *.tsbuildinfo
+*.ts linguist-detectable=false
 
 # -----------------------
 # Environment files
